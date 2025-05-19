@@ -1,22 +1,35 @@
-import * as CryptoJS from 'crypto-js';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Card, Divider, Text } from 'react-native-paper';
-import QRCode from 'react-native-qrcode-svg';
-import AppButton from '../../components/ui/AppButton';
-import AppLayout from '../../components/ui/AppLayout';
-import AppTitle from '../../components/ui/AppTitle';
+import forge from "node-forge";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { Card, Divider, Text } from "react-native-paper";
+import QRCode from "react-native-qrcode-svg";
+import { PUBLIC_KEY_PEM } from "../../assets/certs/publicKey";
+import AppButton from "../../components/ui/AppButton";
+import AppLayout from "../../components/ui/AppLayout";
+import AppTitle from "../../components/ui/AppTitle";
 
 export default function QRScreen() {
-  const [data, setData] = useState('');
-  const [timestamp, setTimestamp] = useState('');
+  const [data, setData] = useState("");
+  const [timestamp, setTimestamp] = useState("");
 
   const generateQr = () => {
-    const cert = 'MIIDpzCCAo+gAwIBAgI...'; // Тестовый сертификат
-    const date = new Date();
-    const payload = cert + date.toISOString();
-    const encrypted = CryptoJS.AES.encrypt(payload, 'secret').toString();
-    setData(encrypted);
+    const publicCert = forge.pki.certificateFromPem(PUBLIC_KEY_PEM);
+    const publicKey = publicCert.publicKey as forge.pki.rsa.PublicKey;
+
+    const cardNumber = "123456";
+    const date = new Date(Date.now() + 5 * 60 * 1000); // +5 мин
+    const isoDate = date.toISOString();
+    const encryptedCard = forge.util.encode64(
+      publicKey.encrypt(cardNumber, "RSAES-PKCS1-V1_5")
+    );
+
+    const encryptedDate = forge.util.encode64(
+      publicKey.encrypt(isoDate, "RSAES-PKCS1-V1_5")
+    );
+
+    const payload = `${encryptedCard}.${encryptedDate}`;
+
+    setData(payload);
     setTimestamp(date.toLocaleString());
   };
 
@@ -52,21 +65,21 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   qrContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
   },
   time: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 12,
-    color: '#888',
+    color: "#888",
   },
   actions: {
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingBottom: 16,
   },
 });

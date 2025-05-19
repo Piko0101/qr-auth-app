@@ -4,7 +4,7 @@ import { Text } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 
 export default function TabsLayout() {
-  const { token } = useAuth();
+  const { user } = useAuth();
 
   return (
     <Tabs
@@ -17,9 +17,12 @@ export default function TabsLayout() {
 
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#1890ff",
+        tabBarActiveTintColor: "rgb(103, 80, 164)",
         headerRight: () => (
-          <Text style={{ marginRight: 10, color: "#555" }}>{token}</Text>
+          <Text style={{ marginRight: 10, color: "#555" }}>
+            {" "}
+            {user ? `👤 ${user}` : ""}
+          </Text>
         ),
       })}
     >

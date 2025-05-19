@@ -13,12 +13,12 @@ export default function SignInScreen() {
   const { setToken, setUser } = useAuth();
 
   const handleLogin = () => {
-    // 🔐 Эмуляция входа
     const fakeToken = `${username}-key-xyz`;
     setToken(fakeToken);
-    setUser({ name: username });
+    setUser(username);
     router.replace('/(tabs)/qr');
   };
+  
 
   return (
     <AppLayout centered>
