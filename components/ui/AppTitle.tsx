@@ -1,15 +1,17 @@
-import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { ReactNode } from 'react';
+import { Text, TextStyle } from 'react-native';
 
-export default function AppTitle({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.title}>{children}</Text>;
+export default function AppTitle({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: TextStyle;
+}) {
+  return (
+    <Text style={[{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }, style]}>
+      {children}
+    </Text>
+  );
 }
 
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    marginBottom: 24,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-});

@@ -1,5 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect, useRouter } from "expo-router";
 import forge from "node-forge";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Card, Divider, Text } from "react-native-paper";
 import QRCode from "react-native-qrcode-svg";
@@ -11,16 +13,17 @@ import AppTitle from "../../components/ui/AppTitle";
 export default function QRScreen() {
   const [data, setData] = useState("");
   const [timestamp, setTimestamp] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const router = useRouter();
 
-  const generateQr = () => {
+  const generateQr = (card: string) => {
     const publicCert = forge.pki.certificateFromPem(PUBLIC_KEY_PEM);
     const publicKey = publicCert.publicKey as forge.pki.rsa.PublicKey;
 
-    const cardNumber = "123456";
     const date = new Date(Date.now() + 5 * 60 * 1000); // +5 мин
     const isoDate = date.toISOString();
     const encryptedCard = forge.util.encode64(
-      publicKey.encrypt(cardNumber, "RSAES-PKCS1-V1_5")
+      publicKey.encrypt(card, "RSAES-PKCS1-V1_5")
     );
 
     const encryptedDate = forge.util.encode64(
@@ -30,12 +33,22 @@ export default function QRScreen() {
     const payload = `${encryptedCard}.${encryptedDate}`;
 
     setData(payload);
-    setTimestamp(date.toLocaleString());
+    setTimestamp(new Date(Date.now()).toLocaleString());
   };
 
-  useEffect(() => {
-    generateQr();
+  const loadCard = useCallback(async () => {
+    const selectedCard = await AsyncStorage.getItem("selectedCard");
+    if (selectedCard) {
+      setCardNumber(selectedCard);
+      generateQr(selectedCard);
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCard();
+    }, [loadCard])
+  );
 
   return (
     <AppLayout>
@@ -50,7 +63,16 @@ export default function QRScreen() {
         </Card.Content>
         <Divider />
         <Card.Actions style={styles.actions}>
-          <AppButton title="Обновить" onPress={generateQr} />
+          <AppButton
+            title="Обновить"
+            onPress={() => generateQr(cardNumber)}
+            style={styles.smallButton}
+          />
+          <AppButton
+            title="Сменить карту"
+            onPress={() => router.push("/select-card")}
+            style={styles.smallButton}
+          />
         </Card.Actions>
       </Card>
     </AppLayout>
@@ -79,7 +101,15 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   actions: {
+    flexDirection: "row",
     justifyContent: "center",
+    gap: 5,
     paddingBottom: 16,
+  },
+  smallButton: {
+    marginHorizontal: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
 });
